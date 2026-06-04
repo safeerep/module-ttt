@@ -37,7 +37,7 @@ class JobStatusResponse(BaseModel):
             "INDEXING | PERSISTING | DONE. Null on any terminal state."
         ),
     )
-    progress: Optional[int] = Field(
+    progress: int = Field(
         None,
         description="0-100 once the work size is known; null = indeterminate.",
     )
