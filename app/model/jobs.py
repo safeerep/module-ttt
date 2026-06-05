@@ -37,15 +37,21 @@ class JobStatusResponse(BaseModel):
             "INDEXING | PERSISTING. Null on any terminal state."
         ),
     )
-    percent: Optional[int] = Field(
+    progress: int = Field(
         None,
-        description="0-100 once the work size is known; null = indeterminate.",
+        description="0-100 once the work size is known, Reset to 0 on terminal state",
     )
     status_message: Optional[str] = Field(
         None, description="Short, human-readable status text for UI display"
     )
     result_graph_id: Optional[str] = Field(
         None, description="Set only when state is COMPLETED"
+    )
+    file_name: Optional[str] = Field(
+    None, description="Original uploaded file name"
+    )
+    file_size: Optional[int] = Field(
+    None, description="Original uploaded file Size"
     )
     result_summary: Optional[Dict[str, Any]] = Field(
         None,
