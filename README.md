@@ -1,6 +1,6 @@
 # About
 
-Module implementing TalkingDB's text to tree workflows.
+TalkingDB Text To Tree (TTT) converts natural language text into structured tree representations, making it easy to transform unstructured content into machine-readable hierarchies.
 
 ## Code Contributor
 
