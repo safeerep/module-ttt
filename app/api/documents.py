@@ -129,17 +129,19 @@ async def submit_document_job(
     "/documents",
     response_model=List[JobStatusResponse],
     summary="List documents",
-    description="List documents, oldest first, optionally filtered by session.",
+    description="List documents, newest first, optionally filtered by session. Paginated.",
     responses={
         401: {"model": ErrorResponse, "description": "Invalid or missing API key"},
     },
 )
 async def list_documents(
     session_id: Optional[str] = Query(None, description="Filter by session"),
+    limit: int = Query(50, ge=1, le=500, description="Max documents to return"),
+    offset: int = Query(0, ge=0, description="Number of documents to skip"),
     api_key: str = Depends(verify_api_key),
 ) -> List[JobStatusResponse]:
     with sqlite_conn() as conn:
-        items = job_store.list_documents(conn, session_id)
+        items = job_store.list_documents(conn, session_id, limit=limit, offset=offset)
     return [JobStatusResponse(**job.to_status_payload()) for job in items]
 
 
@@ -157,6 +159,9 @@ async def remove_document(
     job_id: str = Path(..., description="Document (job) id to remove"),
     api_key: str = Depends(verify_api_key),
 ) -> JobStatusResponse:
+    deleted = False
+    graph_id: Optional[str] = None
+
     with sqlite_conn() as conn:
         job = job_store.get(conn, job_id)
         if job is None:
@@ -165,14 +170,19 @@ async def remove_document(
                 detail={"error_code": "JOB_NOT_FOUND", "message": f"Unknown job id: {job_id}"},
             )
 
-        # Cancel if still processing, then hard-delete.
-        if not job.is_terminal():
-            job_store.request_cancel(conn, job_id)
-        graph_store.delete(conn, job.result_graph_id)
-        job_store.delete(conn, job_id)
+        # Cancel first if still running; decide what to delete from the
+        # *post-cancel* state so the response and cleanup never race the worker.
+        final = job if job.is_terminal() else (job_store.request_cancel(conn, job_id) or job)
 
-    if job.result_graph_id:
-        graph_cache.invalidate(job.result_graph_id)
-    spool.discard(job.temp_path)
+        if final.is_terminal():
+            graph_id = final.result_graph_id
+            graph_store.delete(conn, graph_id)
+            job_store.delete(conn, job_id)
+            deleted = True
 
-    return JobStatusResponse(**job.to_status_payload())
+    if deleted:
+        if graph_id:
+            graph_cache.invalidate(graph_id)
+        spool.discard(job.temp_path)
+
+    return JobStatusResponse(**final.to_status_payload())
