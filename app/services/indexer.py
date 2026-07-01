@@ -1,17 +1,3 @@
-from talkingdb.logger.console import logger
-from talkingdb.clients.sqlite import sqlite_conn
-from app.services.package_symbol_generator import SymbolGenerator
-from app.services.package_text_tokenizer import TextTokenizer
-from talkingdb.models.graph.graph import GraphModel
-from talkingdb.models.document.indexes.index import (
-    FileIndexModel,
-    IndexItem,
-    IndexType,
-)
-from talkingdb.models.document.elements.primitive.table import TableModel
-from talkingdb.models.document.elements.primitive.paragraph import ParagraphModel
-from talkingdb.models.document.document import DocumentModel
-from tqdm import tqdm
 import time
 import os
 
@@ -22,6 +8,22 @@ from uuid import uuid4
 # Called as ``progress(done_units, total_units)`` during indexing.
 # Any exception raised by the callback aborts indexing immediately.
 ProgressCallback = Callable[[int, int], None]
+
+from tqdm import tqdm
+
+from talkingdb.models.document.document import DocumentModel
+from talkingdb.models.document.elements.primitive.paragraph import ParagraphModel
+from talkingdb.models.document.elements.primitive.table import TableModel
+from talkingdb.models.document.indexes.index import (
+    FileIndexModel,
+    IndexItem,
+    IndexType,
+)
+from talkingdb.models.graph.graph import GraphModel
+from app.services.package_text_tokenizer import TextTokenizer
+from app.services.package_symbol_generator import SymbolGenerator
+from talkingdb.clients.sqlite import sqlite_conn
+from talkingdb.logger.console import logger
 
 
 class IndexerService:
