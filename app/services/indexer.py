@@ -95,6 +95,7 @@ class IndexerService:
                     "index": IndexType.TABLE_HEADER,
                     "heading_path": heading_path,
                     "filename": document.filename,
+                    "page": element.page,
                 },
             }
 
@@ -195,6 +196,7 @@ class IndexerService:
                 "index": IndexType.PARA,
                 "heading_path": heading_path,
                 "filename": document.filename,
+                "page": element.page,
             }
 
             nodes.append(
@@ -261,6 +263,7 @@ class IndexerService:
                 "index": IndexType.TABLE,
                 "heading_path": heading_path,
                 "filename": document.filename,
+                "page": element.page,
             }
 
             nodes.append(
